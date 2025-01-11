@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Services\CartService;
 use Illuminate\Http\Request;
-use App\Http\Resources\CartResource;
 use App\Http\Resources\CartItemResource;
 use Illuminate\Support\Facades\Auth;
 
