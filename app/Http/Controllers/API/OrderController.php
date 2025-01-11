@@ -78,12 +78,11 @@ class OrderController extends Controller
         ]);
     }
 
-    public function show(Request $request)
+    public function show($order_id)
     {
         $user = Auth::user();
 
-        // Validasi dan ambil order berdasarkan order_id
-        $order = Order::where('id', $request->input('order_id'))
+        $order = Order::where('id', $order_id)
             ->where('user_id', $user->id)
             ->with('items.product')
             ->first();
@@ -99,11 +98,10 @@ class OrderController extends Controller
         return new OrderResource($order);
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $order_id)
     {
         $user = Auth::user();
-
-        $order = Order::where('id', $request->input('order_id'))
+        $order = Order::where('id', $order_id)
             ->where('user_id', $user->id)
             ->first();
 
