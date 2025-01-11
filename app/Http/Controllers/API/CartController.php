@@ -55,12 +55,12 @@ class CartController extends Controller
     /**
      * Remove an item from the cart.
      */
-    public function removeItem($itemId)
+    public function removeItem($item_id)
     {
         $user = Auth::user();
         $cart = $this->cartService->getCart($user->id);
 
-        $this->cartService->removeItem($cart->id, $itemId);
+        $this->cartService->removeItem($cart->id, $item_id);
         return response()->json([
             'message' => 'Item berhasil dihapus dari keranjang',
             'code' => 204,

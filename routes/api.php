@@ -30,12 +30,12 @@ Route::middleware('auth:api')->group(function () {
     // Cart Routes
     Route::get('/cart', [CartController::class, 'getCart']); // Get cart with items
     Route::post('/cart', [CartController::class, 'addItem']); // Add item to cart
-    Route::delete('/cart/item/{itemId}', [CartController::class, 'removeItem']); // Remove item from cart
+    Route::delete('/cart/item/{item_id}', [CartController::class, 'removeItem']); // Remove item from cart
     Route::post('/cart/checkout', [CartController::class, 'checkout']); // Checkout cart
 
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index']); // List user's orders
     Route::post('/orders', [OrderController::class, 'store']); // Create a new order
-    Route::get('/orders/{order}', [OrderController::class, 'show']); // View a single order
-    Route::put('/orders/{order}', [OrderController::class, 'update']); // Update order status
+    Route::get('/orders/{order_id}', [OrderController::class, 'show']); // View a single order
+    Route::put('/orders/{order_id}', [OrderController::class, 'update']); // Update order status
 });
