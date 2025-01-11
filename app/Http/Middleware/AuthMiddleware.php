@@ -17,19 +17,24 @@ class AuthMiddleware
     public function handle($request, Closure $next, ...$roles)
     {
         if (!Auth::check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json([
+                'error' => 'Unauthorized',
+                'message' => 'Token Diperlukan',
+                'code' => 401
+            ], 401);
         }
-    
+
         $user = Auth::user();
-    
+
         // Cek apakah user memiliki salah satu dari peran yang diperbolehkan
         if (!in_array($user->role, $roles)) {
             return response()->json([
                 'error' => 'Forbidden',
-                'message'=> 'Anda Tidak Memiliki Akses',
-        ], 403);
+                'code' => 403,
+                'message' => 'Anda Tidak Memiliki Akses',
+            ], 403);
         }
-    
+
         return $next($request);
     }
 }
