@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\CartItem;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CartService
 {
@@ -54,7 +54,22 @@ class CartService
     public function removeItem(int $cartId, int $itemId): void
     {
         $cart = Cart::findOrFail($cartId);
-        $item = $cart->items()->findOrFail($itemId);
+        $item = $cart->items()->find($itemId);
+
+        if (!$item) {
+            throw new ModelNotFoundException('Item tidak ditemukan di keranjang.');
+        }
+        $item->delete();
+    }
+
+    public function removeItemByProductId(int $cartId, int $productId): void
+    {
+        $cart = Cart::findOrFail($cartId);
+        $item = $cart->items()->where('product_id', $productId)->first();
+
+        if (!$item) {
+            throw new ModelNotFoundException('Item dengan product_id ini tidak ditemukan di keranjang.');
+        }
         $item->delete();
     }
 

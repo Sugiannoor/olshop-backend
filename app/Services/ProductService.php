@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Storage;
 
 class ProductService
@@ -16,7 +17,6 @@ class ProductService
             $query->where('name', 'LIKE', '%' . $search . '%')
                 ->orWhere('description', 'LIKE', '%' . $search . '%');
         }
-
         $totalData = $query->count();
         $perPage = 10;
         $totalPages = ceil($totalData / $perPage);
@@ -60,11 +60,29 @@ class ProductService
     /**
      * Delete a product.
      */
-    public function destroy(Product $product)
+    public function destroy($product_id)
     {
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
+        try {
+            $product = Product::findOrFail($product_id);
+
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $product->delete();
+
+            return [
+                'message' => 'Produk berhasil dihapus',
+                'status' => 'success',
+                'code' => 204,
+            ];
+        } catch (ModelNotFoundException $e) {
+            // Tangani jika produk tidak ditemukan
+            return [
+
+                'message' => 'Produk tidak ditemukan',
+                'status' => 'error',
+                'code' => 404,
+            ];
         }
-        $product->delete();
     }
 }

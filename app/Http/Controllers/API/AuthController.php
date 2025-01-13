@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\API;
-  
+
 use App\Http\Controllers\API\BaseController as BaseController;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -9,13 +9,14 @@ use Illuminate\Support\Facades\Validator as FacadesValidator;
 
 class AuthController extends BaseController
 {
- 
+
     /**
      * Register a User.
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
 
         $validator = FacadesValidator::make($request->all(), [
             'name' => 'required',
@@ -23,20 +24,20 @@ class AuthController extends BaseController
             'password' => 'required',
             'c_password' => 'required|same:password',
         ]);
-     
-        if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());       
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
         }
-     
+
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
         $user = User::create($input);
         $success['user'] =  $user;
-   
+
         return $this->sendResponse($success, 'User register successfully.');
     }
-  
-  
+
+
     /**
      * Get a JWT via given credentials.
      *
@@ -45,16 +46,19 @@ class AuthController extends BaseController
     public function login()
     {
         $credentials = request(['email', 'password']);
-  
+
         if (! $token = auth()->attempt($credentials)) {
-            return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
+            return $this->sendError('Unauthorised.', [
+                'email' => ['Email Atau Password Salah'],
+                'password' => ['Email Atau Password Salah'],
+            ], 401);
         }
-  
+
         $success = $this->respondWithToken($token);
-   
+
         return $this->sendResponse($success, 'User login successfully.');
     }
-  
+
     /**
      * Get the authenticated User.
      *
@@ -63,10 +67,10 @@ class AuthController extends BaseController
     public function profile()
     {
         $success = auth()->user();
-   
+
         return $this->sendResponse($success, 'Refresh token return successfully.');
     }
-  
+
     /**
      * Log the user out (Invalidate the token).
      *
@@ -75,10 +79,10 @@ class AuthController extends BaseController
     public function logout()
     {
         auth()->logout();
-        
+
         return $this->sendResponse([], 'Successfully logged out.');
     }
-  
+
     /**
      * Refresh a token.
      *
@@ -87,13 +91,13 @@ class AuthController extends BaseController
     public function refresh()
     {
         $success = $this->respondWithToken(auth()->refresh());
-   
+
         return $this->sendResponse($success, 'Refresh token return successfully.');
     }
-    
-    public function test (){
-        return response()->json(['message' => 'Test']);
 
+    public function test()
+    {
+        return response()->json(['message' => 'Test']);
     }
     /**
      * Get the token array structure.
@@ -111,4 +115,3 @@ class AuthController extends BaseController
         ];
     }
 }
-

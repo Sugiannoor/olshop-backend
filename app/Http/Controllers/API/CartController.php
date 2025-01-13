@@ -54,17 +54,31 @@ class CartController extends Controller
     /**
      * Remove an item from the cart.
      */
-    public function removeItem($item_id)
+    public function removeItem($product_id)
     {
-        $user = Auth::user();
-        $cart = $this->cartService->getCart($user->id);
+        try {
+            $user = Auth::user();
+            $cart = $this->cartService->getCart($user->id);
+            $this->cartService->removeItemByProductId($cart->id, $product_id);
 
-        $this->cartService->removeItem($cart->id, $item_id);
-        return response()->json([
-            'message' => 'Item berhasil dihapus dari keranjang',
-            'code' => 204,
-            'status' => 'success',
-        ], 204);
+            return response()->json([
+                'message' => 'Item berhasil dihapus dari keranjang',
+                'code' => 200,
+                'status' => 'success',
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return response()->json([
+                'message' => 'Item dengan product_id ini tidak ditemukan di keranjang',
+                'code' => 404,
+                'status' => 'error',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menghapus item',
+                'code' => 500,
+                'status' => 'error',
+            ], 500);
+        }
     }
 
     /**

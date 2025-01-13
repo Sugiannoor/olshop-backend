@@ -8,6 +8,8 @@ use App\Http\Resources\OrderResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
+use App\Services\OrderService;
+use DB;
 
 class OrderController extends Controller
 {
@@ -33,49 +35,105 @@ class OrderController extends Controller
     /**
      * Store a newly created order.
      */
-    public function store(OrderRequest $request)
+    // public function store(OrderRequest $request)
+    // {
+    //     $user = Auth::user();
+
+    //     // Ambil keranjang pengguna dengan relasi items dan product
+    //     $cart = $user->cart()->with('items.product')->first();
+
+    //     if (!$cart || $cart->items->isEmpty()) {
+    //         return response()->json([
+    //             'message' => 'Keranjang Anda Masih Kosong',
+    //             'status' => 'error',
+    //             'code' => 400,
+    //         ], 400);
+    //     }
+
+    //     $totalPrice = $cart->items->sum(function ($item) {
+    //         return $item->quantity * $item->product->price;
+    //     });
+
+    //     // Transaksi database
+    //     DB::beginTransaction();
+    //     try {
+    //         // Simpan pesanan
+    //         $order = Order::create([
+    //             'user_id' => $user->id,
+    //             'address' => $request->address,
+    //             'payment_method' => $request->payment_method,
+    //             'total_price' => $totalPrice,
+    //             'status' => 'pending',
+    //         ]);
+
+    //         // Simpan item pesanan
+    //         $orderItems = $cart->items->map(function ($item) use ($order) {
+    //             return [
+    //                 'order_id' => $order->id,
+    //                 'product_id' => $item->product_id,
+    //                 'quantity' => $item->quantity,
+    //                 'price' => $item->product->price,
+    //                 'created_at' => now(),
+    //                 'updated_at' => now(),
+    //             ];
+    //         })->toArray();
+
+    //         $order->items()->insert($orderItems);
+
+    //         // Kurangi stok produk
+    //         foreach ($cart->items as $item) {
+    //             $product = $item->product;
+
+    //             if ($product->stock < $item->quantity) {
+    //                 throw new \Exception("Stok untuk produk '{$product->name}' tidak mencukupi.");
+    //             }
+
+    //             $product->decrement('stock', $item->quantity);
+    //         }
+
+    //         // Kosongkan keranjang
+    //         $cart->items()->delete();
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'message' => 'Pesanan berhasil dibuat',
+    //             'data' => $order->load('items.product'),
+    //             'status' => 'success',
+    //             'code' => 201,
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'message' => 'Terjadi kesalahan saat membuat pesanan',
+    //             'error' => $e->getMessage(),
+    //             'status' => 'error',
+    //             'code' => 500,
+    //         ], 500);
+    //     }
+    // }
+
+    public function store(OrderRequest $request, OrderService $orderService)
     {
         $user = Auth::user();
-        $cart = Order::where('user_id', $user->id)
-            ->with('items.product')->first();
-
-        if (!$cart || $cart->items->isEmpty()) {
+        try {
+            // Panggil service untuk membuat pesanan
+            $order = $orderService->createOrder($user, $request->address, $request->payment_method);
             return response()->json([
-                'message' => 'Keranjang Anda Masih Kosong',
+                'message' => 'Pesanan berhasil dibuat',
+                'data' => $order->load('items.product'),
+                'status' => 'success',
+                'code' => 201,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat membuat pesanan',
+                'error' => $e->getMessage(),
                 'status' => 'error',
-                'code' => 400,
-            ], 400);
+                'code' => 500,
+            ], 500);
         }
-
-        $totalPrice = $cart->items->sum(function ($item) {
-            return $item->quantity * $item->product->price;
-        });
-        $order = Order::create([
-            'user_id' => $user->id,
-            'address' => $request->address,
-            'payment_method' => $request->payment_method,
-            'total_price' => $totalPrice,
-            'status' => 'pending',
-        ]);
-        $orderItems = $cart->items->map(function ($item) use ($order) {
-            return [
-                'order_id' => $order->id,
-                'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-                'price' => $item->product->price,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        })->toArray();
-
-        $order->items()->insert($orderItems);
-        $cart->items()->delete();
-        return response()->json([
-            'message' => 'Order created successfully',
-            'data' => $order,
-            'status' => 'success',
-            'code' => 201
-        ]);
     }
 
     public function show($order_id)

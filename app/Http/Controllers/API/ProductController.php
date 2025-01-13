@@ -8,7 +8,9 @@ use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductCollection;
 use App\Models\Product;
 use App\Services\ProductService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Storage;
 
 class ProductController extends Controller
 {
@@ -40,7 +42,7 @@ class ProductController extends Controller
         return new ProductResource($this->productService->show($product));
     }
 
-    public function update($product_id, ProductRequest $request)
+    public function update(ProductRequest $request, $product_id)
     {
         $product = Product::findOrFail($product_id);
         $updatedProduct = $this->productService->update($product, $request->validated());
@@ -58,7 +60,29 @@ class ProductController extends Controller
 
     public function destroy($product_id)
     {
-        $this->productService->destroy($product_id);
-        return response()->json(['message' => 'Produk berhasil dihapus', 'status' => 'success', 'code' => 204], 204);
+        try {
+            $product = Product::findOrFail($product_id);
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $product->delete();
+            return response()->json([
+                'message' => 'Produk berhasil dihapus',
+                'status' => 'success',
+                'code' => 200,
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Produk tidak ditemukan',
+                'status' => 'error',
+                'code' => 404,
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menghapus produk',
+                'status' => 'error',
+                'code' => 500,
+            ], 500);
+        }
     }
 }
