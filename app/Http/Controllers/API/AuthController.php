@@ -20,7 +20,7 @@ class AuthController extends BaseController
 
         $validator = FacadesValidator::make($request->all(), [
             'name' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users',
             'password' => 'required',
             'c_password' => 'required|same:password',
         ]);
@@ -45,18 +45,60 @@ class AuthController extends BaseController
      */
     public function login()
     {
-        $credentials = request(['email', 'password']);
 
-        if (! $token = auth()->attempt($credentials)) {
-            return $this->sendError('Unauthorised.', [
-                'email' => ['Email Atau Password Salah'],
-                'password' => ['Email Atau Password Salah'],
+        $credentials = request()->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|min:6',
+        ], [
+            'email.required' => 'Email harus diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password harus diisi.',
+            'password.min' => 'Password minimal harus terdiri dari 6 karakter.',
+        ]);
+
+        // Cek kredensial dan dapatkan token
+        if (!$token = auth()->attempt($credentials)) {
+            return response()->json([
+                'message' => 'Unauthorised',
+                'errors' => [
+                    'email' => ['Email atau Password Salah'],
+                    'password' => ['Email atau Password Salah'],
+                ],
+                'status' => 'error',
+                'code' => 401,
             ], 401);
         }
 
-        $success = $this->respondWithToken($token);
+        // Dapatkan user yang sedang login
+        $user = auth()->user();
 
-        return $this->sendResponse($success, 'User login successfully.');
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+                'errors' => [],
+                'status' => 'error',
+                'code' => 404,
+            ], 404);
+        }
+
+        // Data sukses
+        $success = [
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ]
+        ];
+
+        return response()->json([
+            'message' => 'User login successfully.',
+            'data' => $success,
+            'status' => 'success',
+            'code' => 200,
+        ], 200);
     }
 
     /**

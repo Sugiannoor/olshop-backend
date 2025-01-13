@@ -21,10 +21,10 @@ Route::group([
 // Protected routes for authenticated users
 Route::middleware('auth:api')->group(function () {
     Route::get('/products', [ProductController::class, 'index']); // List all products
-    Route::post('/products', [ProductController::class, 'store']); // Create a new product
+    Route::post('/products', [ProductController::class, 'store'])->middleware('role:admin'); // Create a new product
     Route::get('/products/{product_id}', [ProductController::class, 'show']); // Get details of a product
-    Route::post('/products/{product_id}', [ProductController::class, 'update']); // Update a product
-    Route::delete('/products/{product_id}', [ProductController::class, 'destroy']); // Delete a product
+    Route::post('/products/{product_id}', [ProductController::class, 'update'])->middleware('role:admin'); // Update a product
+    Route::delete('/products/{product_id}', [ProductController::class, 'destroy'])->middleware('role:admin'); // Delete a product
 
     // Cart Routes
     Route::get('/cart', [CartController::class, 'getCart']); // Get cart with items
@@ -36,5 +36,5 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']); // List user's orders
     Route::post('/orders', [OrderController::class, 'store']); // Create a new order
     Route::get('/orders/{order_id}', [OrderController::class, 'show']); // View a single order
-    Route::put('/orders/{order_id}', [OrderController::class, 'update']); // Update order status
+    Route::put('/orders/{order_id}', [OrderController::class, 'update'])->middleware('role:admin'); // Update order status
 });
