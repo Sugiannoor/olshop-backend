@@ -8,6 +8,7 @@ use App\Http\Resources\OrderResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
+use App\Services\DuitkuService;
 use App\Services\OrderService;
 use DB;
 
@@ -24,7 +25,6 @@ class OrderController extends Controller
             ->with('items.product')
             ->get();
 
-        // Format data dengan OrderResource
         return response()->json([
             'data' => OrderResource::collection($orders),
             'code' => 200,
@@ -118,8 +118,7 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         try {
-            // Panggil service untuk membuat pesanan
-            $order = $orderService->createOrder($user, $request->address, $request->payment_method);
+            $order = $orderService->createOrder($user, $request->address, $request->payment_method, $request->qr_string, $request->va_number, $request->reference);
             return response()->json([
                 'message' => 'Pesanan berhasil dibuat',
                 'data' => $order->load('items.product'),
@@ -183,5 +182,30 @@ class OrderController extends Controller
             'status' => 'success',
             'code' => 200
         ]);
+    }
+
+    public function checkTransaction(Request $request, DuitkuService $duitkuService)
+    {
+        $request->validate([
+            'merchantOrderId' => 'required|string',
+        ]);
+
+        $merchantOrderId = $request->input('merchantOrderId');
+        try {
+            $data = $duitkuService->checkTransactionStatus($merchantOrderId);
+            return response()->json([
+                'message' => 'Cek transaksi berhasil',
+                'data' => $data,
+                'status' => 'success',
+                'code' => 200,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal cek transaksi',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'code' => 500,
+            ], 500);
+        }
     }
 }

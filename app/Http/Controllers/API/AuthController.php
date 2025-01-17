@@ -108,11 +108,21 @@ class AuthController extends BaseController
      */
     public function profile()
     {
-        $success = auth()->user();
+        // Mendapatkan data user yang sedang login
+        $user = auth()->user();
 
-        return $this->sendResponse($success, 'Refresh token return successfully.');
+        // Struktur JSON yang dikirimkan
+        $data = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role ?? 'CUSTOMER', // Tambahkan jika ada kolom role
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
+
+        return $this->sendResponse($data, 'User profile fetched successfully.');
     }
-
     /**
      * Log the user out (Invalidate the token).
      *

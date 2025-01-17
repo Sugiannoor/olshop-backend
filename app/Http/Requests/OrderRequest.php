@@ -15,7 +15,7 @@ class OrderRequest extends FormRequest
     {
         return [
             'address' => 'required|string|max:255',
-            'payment_method' => 'required|string|in:credit_card,cash,transfer',
+            'payment_method' => 'required|string',
         ];
     }
 
@@ -24,7 +24,6 @@ class OrderRequest extends FormRequest
         return [
             'address.required' => 'Alamat pengiriman harus diisi.',
             'payment_method.required' => 'Metode pembayaran harus diisi.',
-            'payment_method.in' => 'Metode pembayaran tidak valid.',
         ];
     }
 }

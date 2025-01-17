@@ -3,13 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\CartController;
+use App\Http\Controllers\API\CheckoutController;
 use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ProductController;
 
 Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
-], function ($router) {
+], function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::get('/test', [AuthController::class, 'test'])->middleware(['auth:api', 'role:user,admin']);
@@ -18,23 +20,32 @@ Route::group([
     Route::post('/profile', [AuthController::class, 'profile'])->middleware('auth:api');
 });
 
-// Protected routes for authenticated users
+Route::group([
+    'middleware' => 'api',
+    'prefix' => 'duitku'
+], function () {
+    Route::post('/payment-methods', [PaymentController::class, 'getPaymentMethods']);
+    Route::post('/payment/create', [PaymentController::class, 'create']);
+    Route::post('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+    Route::get('/payment/redirect', [PaymentController::class, 'redirect'])->name('payment.redirect');
+});
 Route::middleware('auth:api')->group(function () {
-    Route::get('/products', [ProductController::class, 'index']); // List all products
-    Route::post('/products', [ProductController::class, 'store'])->middleware('role:admin'); // Create a new product
-    Route::get('/products/{product_id}', [ProductController::class, 'show']); // Get details of a product
-    Route::post('/products/{product_id}', [ProductController::class, 'update'])->middleware('role:admin'); // Update a product
-    Route::delete('/products/{product_id}', [ProductController::class, 'destroy'])->middleware('role:admin'); // Delete a product
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::post('/products', [ProductController::class, 'store'])->middleware('role:admin');
+    Route::get('/products/{product_id}', [ProductController::class, 'show']);
+    Route::post('/products/{product_id}', [ProductController::class, 'update'])->middleware('role:admin');
+    Route::delete('/products/{product_id}', [ProductController::class, 'destroy'])->middleware('role:admin');
 
     // Cart Routes
-    Route::get('/cart', [CartController::class, 'getCart']); // Get cart with items
-    Route::post('/cart', [CartController::class, 'addItem']); // Add item to cart
-    Route::delete('/cart/item/{product_id}', [CartController::class, 'removeItem']); // Remove item from cart
-    Route::post('/cart/checkout', [CartController::class, 'checkout']); // Checkout cart
+    Route::get('/cart', [CartController::class, 'getCart']);
+    Route::post('/cart', [CartController::class, 'addItem']);
+    Route::delete('/cart/item/{product_id}', [CartController::class, 'removeItem']);
+    Route::post('/cart/checkout', [CartController::class, 'checkout']);
 
     // Order Routes
-    Route::get('/orders', [OrderController::class, 'index']); // List user's orders
-    Route::post('/orders', [OrderController::class, 'store']); // Create a new order
-    Route::get('/orders/{order_id}', [OrderController::class, 'show']); // View a single order
-    Route::put('/orders/{order_id}', [OrderController::class, 'update'])->middleware('role:admin'); // Update order status
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/checkout', [CheckoutController::class, 'checkout']);
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/orders/{order_id}', [OrderController::class, 'show']);
+    Route::put('/orders/{order_id}', [OrderController::class, 'update'])->middleware('role:admin');
 });

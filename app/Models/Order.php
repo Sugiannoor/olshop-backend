@@ -15,6 +15,13 @@ class Order extends Model
         'status',
         'address',
         'payment_method',
+        'payment_status',
+        'payment_reference',
+        'merchant_order_id',
+        'reference',
+        'va_number',
+        'qr_string',
+
     ];
 
     protected $attributes = [
